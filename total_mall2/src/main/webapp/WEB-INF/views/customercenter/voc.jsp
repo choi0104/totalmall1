@@ -91,7 +91,7 @@
                 </div>
                 <div id="VocWritecontentbox">
                     <div id="VocWritecontent">
-                        <input style="width: 100%;height: 350px;" type="text" name="content" placeholder="의견을 작성해주세요.">
+                        <textarea style="width: 100%;height: 350px;" name="content" placeholder="의견을 작성해주세요."></textarea>
                     </div>
                     <div id="VocWritefile">
                         <input type="file" id="file" name="uploadFile"><br><br>
