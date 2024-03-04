@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="human.smart.totalMall.ProductMapper">
+	<select id="getMtoday" resultType="productVO">
+		select * from tb_product
+		where p_status = 0;
+	</select>
+	<select id="getMkind" resultType="productVO">
+		select * from tb_product
+		where p_status = 0;
+	</select>
+	
+	<select id="getMchoice" parameterType="String" resultType="productVO">
+		select * from tb_product
+		<choose>
+			<when test="_parameter == 'food'">
+				WHERE category IN ('meat', 'vegetable', 'fruits', 'frozen')
+			</when>
+			<when test="_parameter == 'homeDeco'">
+				WHERE category IN ('kitchen', 'curtain')
+			</when>
+			<when test="_parameter == 'hobby'">
+				WHERE category IN ('games', 'lego', 'petsupplies')
+			</when>
+			<when test="_parameter == 'dailyNecessity'">
+				WHERE category IN ('dailynecessities', 'bodyhair')
+			</when>
+			<when test="_parameter == 'clothes'">
+				WHERE category IN ('men', 'women')
+			</when>
+			<when test="_parameter == 'book'">
+				WHERE category IN ('education', 'novels', 'overseas')
+			</when>
+			<when test="_parameter == 'furniture'">
+				WHERE category IN ('living', 'bedding')
+			</when>
+			<when test="_parameter == 'homeAppliances'">
+				WHERE category IN ('homeAppliances', 'digital')
+			</when>
+			<otherwise>
+				WHERE category IN ('soccer', 'golf')
+			</otherwise>
+		</choose>
+				and p_status = 0;
+	</select>
+
+
+	<!-- home 카테고리별 상품 -->
+	<select id="getMcategory" parameterType="java.lang.Integer" resultType="productVO">
+		select * from tb_product 
+		<choose>
+			<when test="_parameter == 1">
+				WHERE category IN ('meat', 'vegetable', 'fruits', 'frozen')
+			</when>
+			<when test="_parameter == 2">
+				WHERE category IN ('kitchen', 'curtain')
+			</when>
+			<when test="_parameter == 3">
+				WHERE category IN ('games', 'lego', 'petsupplies')
+			</when>
+			<when test="_parameter == 4">
+				WHERE category IN ('dailynecessities', 'bodyhair')
+			</when>
+			<when test="_parameter == 5">
+				WHERE category IN ('men', 'women')
+			</when>
+			<when test="_parameter == 6">
+				WHERE category IN ('education', 'novels', 'overseas')
+			</when>
+			<when test="_parameter == 7">
+				WHERE category IN ('living', 'bedding')
+			</when>
+			<when test="_parameter == 8">
+				WHERE category IN ('homeAppliances', 'digital')
+			</when>
+			<otherwise>
+				WHERE category IN ('soccer', 'golf')
+			</otherwise>
+		</choose>
+				and p_status = 0;
+	</select>
+	<select id="getProduct" parameterType="_int" resultType="productVO">
+		select * from tb_product where p_idx = #{p_idx} and p_status = 0;
+	</select>
+	<select id="getProducts" parameterType="string" resultType="productVO">
+				SELECT * FROM tb_product WHERE category LIKE #{category} and p_status = 0
+				ORDER BY p_idx DESC
+				LIMIT 20 OFFSET 0
+	</select>
+	<select id="getProducts2" parameterType="SearchVO" resultType="productVO">
+		<choose>
+			<when test="searchWord != null"><!-- 검색어가 있는 경우  -->
+				select /*+ INDEX(tb_product tb_product_pk) */
+				        		*
+				        		from tb_product
+						<choose>
+							<when test="searchField == 'title'"><!-- 검색영역: 제목 -->
+								where title like CONCAT('%',#{searchWord},'%')
+							</when>
+							<when test="searchField == 'content'"><!-- 검색영역: 내용 -->
+								where content like CONCAT('%',#{searchWord},'%')
+							</when>
+							<otherwise><!-- 검색영역: 작성자 -->
+								where product_name like CONCAT('%',#{searchWord},'%')
+							</otherwise>
+						</choose>
+				        		and p_status = 0
+						 		order by p_idx desc
+				                limit #{startIdx}, 5
+			</when>
+			<otherwise><!-- 검색어가 없는 경우  -->
+				select /*+ INDEX(tb_product tb_product_pk) */
+				        		*
+				        		from tb_product
+				        		where p_status = 0
+				        		order by p_idx desc
+				       			limit #{startIdx}, 5
+			</otherwise>
+		</choose>
+	</select>
+		<!-- 조회수 업데이트: update  -->
+	<update id="updateReadCount" parameterType="_int">
+		update tb_product set read_cnt = (read_cnt + 1) where p_idx = #{p_idx}
+	</update>
+	
+	<select id="getReview" parameterType="map" resultType="reviewVO">
+		select* from tb_review
+		where p_idx= #{p_idx}
+		<choose>
+			<when test="orderBy  == 1">
+				ORDER BY post_date ASC;
+			</when>
+			<when test="orderBy  == 2">
+				ORDER BY post_date DESC;
+			</when>
+			<when test="orderBy  == 3">
+				ORDER BY star ASC;
+			</when>
+			<otherwise>
+				ORDER BY star DESC;
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getProRev" parameterType="_int" resultType="productVO">
+		select * from tb_product where p_idx = #{p_idx} and p_status = 0
+	</select>
+		<!-- 총 게시물수 조회: select -->
+	<select id="getTotalCount" parameterType="searchVO" resultType="_int">
+		<!-- 검색어가 있는 경우와 없는 경우  -->
+		<choose>
+			<when test="searchWord != null">
+				select count(*)
+					from tb_product
+					<choose>
+						<when test="searchField == 'title'"><!-- 검색영역: 제목 -->
+							where title like CONCAT('%',#{searchWord},'%')
+						</when>
+						<when test="searchField == 'content'"><!-- 검색영역: 내용 -->
+							where content like CONCAT('%',#{searchWord},'%')
+						</when>
+						<otherwise><!-- 검색영역: 작성자 -->
+							where product_name like CONCAT('%',#{searchWord},'%')
+						</otherwise>
+					</choose>
+					and p_status = 0
+			</when>
+			<otherwise>
+				select count(*)
+					from tb_product	where p_status = 0
+					
+			</otherwise>
+		</choose>
+	</select>
+	<!-- 리뷰 글 등록: insert -->
+	<insert id="reInsert" parameterType="reviewVO">
+		<choose>
+			<when test="originfile_name != null"><!-- test 조건식에 사용되는 변수: 입력값에서 가져온 변수  -->
+				insert into tb_review (r_idx, m_idx, p_idx, member_id, member_name, content, 
+				star, originfile_name, savefile_name)
+				values(#{r_idx},#{m_idx},#{p_idx},#{member_id},#{member_name} ,#{content},
+				#{star}, #{originfile_name}, #{savefile_name})
+			</when>
+			<otherwise>
+				insert into tb_review (r_idx, m_idx, p_idx, member_id, member_name, content, star)
+				values(#{r_idx},#{m_idx},#{p_idx},#{member_id},#{member_name} ,#{content}, #{star})
+			</otherwise>
+		</choose>
+	</insert>
+	<!-- 판매자 문의 글 등록: insert -->
+	<insert id="pvocInsert" parameterType="pvocVO">
+		<choose>
+			<when test="originfile_name != null"><!-- test 조건식에 사용되는 변수: 입력값에서 가져온 변수  -->
+				insert into tb_pvoc (m_idx, p_idx, product_name, writer, email, content, originfile_name, savefile_name, voc_state)
+					values(#{m_idx},#{p_idx},#{product_name},#{writer},#{email},#{content},#{originfile_name}
+					,#{savefile_name},#{voc_state})
+			</when>
+			<otherwise>
+				insert into tb_pvoc (m_idx, p_idx, product_name, writer, email, content, voc_state) 
+					values(#{m_idx},#{p_idx},#{product_name},#{writer},#{email},#{content},#{voc_state})
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 상품등록: insert -->
+	<insert id="insert" parameterType="ProductVO">
+				insert into tb_product (m_idx, category, product_name, product_code, brand, summary, detail,
+										start_date,end_date,origin_file_name1,save_file_name1,
+										origin_file_name2,save_file_name2,price,discount_rate,quantity)
+					   values(#{m_idx},#{category}, #{product_name}, #{product_code}, #{brand}, #{summary}, #{detail},
+					   		#{start_date},#{end_date},#{origin_file_name1},#{save_file_name1},
+					   		#{origin_file_name2},#{save_file_name2},#{price},#{discount_rate},#{quantity})
+	</insert>
+	
+	<!-- 상품 수정하기: update -->
+	<insert id="modify" parameterType="ProductVO">
+		<choose>
+			<when test="origin_file_name1 != null and origin_file_name2 != null">		
+				update tb_product set category=#{category}, product_name=#{product_name}, product_code=#{product_code}, 
+										brand=#{brand}, summary=#{summary}, detail=#{detail}, start_date=#{start_date}, end_date=#{end_date},
+										origin_file_name1=#{origin_file_name1},save_file_name1=#{save_file_name1},
+										origin_file_name2=#{origin_file_name2},save_file_name2=#{save_file_name2},
+										price=#{price},discount_rate=#{discount_rate},quantity=#{quantity},p_last_modified_date=now()
+					   				where p_idx=#{p_idx}
+			</when>
+			<when test="origin_file_name1 != null">		
+				update tb_product set category=#{category}, product_name=#{product_name}, product_code=#{product_code}, 
+										brand=#{brand}, summary=#{summary}, detail=#{detail}, start_date=#{start_date}, end_date=#{end_date},
+										origin_file_name1=#{origin_file_name1},save_file_name1=#{save_file_name1},
+										price=#{price},discount_rate=#{discount_rate},quantity=#{quantity},p_last_modified_date=now()
+					   				where p_idx=#{p_idx}
+			</when>
+			<when test="origin_file_name2 != null">		
+				update tb_product set category=#{category}, product_name=#{product_name}, product_code=#{product_code}, 
+										brand=#{brand}, summary=#{summary}, detail=#{detail}, start_date=#{start_date}, end_date=#{end_date},
+										origin_file_name2=#{origin_file_name2},save_file_name2=#{save_file_name2},
+										price=#{price},discount_rate=#{discount_rate},quantity=#{quantity},p_last_modified_date=now()
+					   				where p_idx=#{p_idx}
+			</when>
+			<otherwise>
+				update tb_product set category=#{category}, product_name=#{product_name}, product_code=#{product_code}, 
+										brand=#{brand}, summary=#{summary}, detail=#{detail}, start_date=#{start_date}, end_date=#{end_date},
+										price=#{price},discount_rate=#{discount_rate},quantity=#{quantity},p_last_modified_date=now()
+					   				where p_idx=#{p_idx}
+			</otherwise>
+		</choose>
+	</insert>
+	
+	<!-- 상품 판매중단 처리: update -->
+	<update id="discontinued" parameterType="_int">
+		update tb_product set p_status=1, p_last_modified_date=now()
+			   where p_idx = #{p_idx}
+	</update>
+	<!-- 상품 판매복구 처리: update -->
+	<update id="continued" parameterType="_int">
+		update tb_product set p_status=0, p_last_modified_date=now()
+			   where p_idx = #{p_idx}
+	</update>
+	<!-- 내 상품조회: select -->
+	<select id="getProducts3" parameterType="_int"
+		resultType="productVO">
+		SELECT * FROM tb_product WHERE m_idx LIKE #{m_idx}
+		ORDER BY p_last_modified_date DESC
+		LIMIT 20 OFFSET 0
+	</select>
+	
+	<!-- 판매중인 상품 수: select -->
+	<select id="p_con" resultType="_int">
+        SELECT COUNT(*)
+        FROM tb_product
+        WHERE p_status = 0;
+    </select>
+    
+    <!-- 판매중단 상품 수: select -->
+	<select id="p_discon" resultType="_int">
+        SELECT COUNT(*)
+        FROM tb_product
+        WHERE p_status = 1;
+    </select>
+	<!-- 개인회원 전체 주문조회: select -->
+	<select id="getOrders" parameterType="_int" resultType="cartVO">
+		SELECT
+		c.o_idx, c.c_idx, c.m_idx, c.c_quantity, c.c_update_time,
+		p.p_idx, p.product_name, p.price, p.discount_rate, p.save_file_name1,
+		o.o_update_time, o.totalprice
+		FROM
+		tb_cart c
+		LEFT OUTER JOIN tb_product p ON c.p_idx = p.p_idx
+		LEFT OUTER JOIN tb_order o ON c.o_idx = o.o_idx
+		WHERE
+		c.m_idx = #{m_idx} AND
+	    c.payment_or_not NOT IN (0, 1)
+	</select>
+	<!-- 개인회원 홈 주문조회: select -->
+	<select id="getOrders_1" parameterType="_int" resultType="cartVO">
+		SELECT
+		c.o_idx, c.c_idx, c.m_idx, c.c_quantity, c.c_update_time,
+		p.p_idx, p.product_name, p.price, p.discount_rate, p.save_file_name1,
+		o.o_update_time, o.totalprice
+		FROM
+		tb_cart c
+		LEFT OUTER JOIN tb_product p ON c.p_idx = p.p_idx
+		LEFT OUTER JOIN tb_order o ON c.o_idx = o.o_idx
+		WHERE
+		c.m_idx = #{m_idx} AND
+	    c.payment_or_not NOT IN (0, 1) AND
+	    o.o_update_time >= CURDATE() - INTERVAL 1 MONTH
+	</select>
+
+	<!-- 기업회원 주문조회: select -->
+	<select id="getOrders2" parameterType="_int" resultType="cartVO">
+		SELECT c_idx, p_idx, m_idx, o_idx, c_quantity, o_update_time, 
+		totalprice, payment_or_not, product_name, price, discount_rate, save_file_name1, mMIdx
+		FROM orderList
+		WHERE m_idx = #{m_idx}
+		ORDER BY o_update_time desc
+	</select>
+	
+	<!-- 관리자 상품조회: select -->
+	<select id="getProducts4" resultType="productVO">
+		SELECT * FROM tb_product
+		ORDER BY
+		p_last_modified_date DESC
+		LIMIT 20 OFFSET 0
+	</select>
+
+	<!-- 관리자 주문조회: select -->
+	<select id="getOrders3" resultType="cartVO">
+		SELECT c_idx, p_idx, m_idx, o_idx, c_quantity, o_update_time, 
+		totalprice, payment_or_not, product_name, price, discount_rate, save_file_name1, mMIdx
+		FROM orderList
+		ORDER BY o_update_time desc
+	</select>
+	
+	
+	
+	
+	<!-- 장바구니 상품등록: insert -->
+	<insert id="cartInsert" parameterType="CartVO">
+				insert into tb_cart (c_idx, p_idx, m_idx, c_quantity )
+					   values(#{c_idx},#{p_idx}, #{m_idx}, #{c_quantity})
+	</insert>
+	
+	<!-- 장바구니 상품목록 불러오기: select -->
+	<select id="getCarts" parameterType="_int" resultType="cartVO">
+		select a.c_idx, a.m_idx, a.c_quantity, b.p_idx, b.product_name, b.price, b.discount_rate, b.save_file_name1
+		from tb_cart a left outer join tb_product b on a.p_idx = b.p_idx 
+		where a.m_idx = #{m_idx}
+		and payment_or_not = 0
+		
+	</select>
+	
+	<!-- 장바구니 상품 확인하기 -->
+	<select id="cartCheck" parameterType="CartVO" resultType="CartVO">
+		select * from tb_cart where p_idx = #{p_idx}
+							  and m_idx = #{m_idx}
+							  and payment_or_not = 0
+	</select>
+	
+	<!-- 장바구니 수량 변경하기 -->
+	<update id="cartQuantityUpdate" parameterType="CartVO">
+		update tb_cart set c_quantity=#{c_quantity}
+			where m_idx=#{m_idx}
+			and p_idx=#{p_idx}
+			and payment_or_not = 0
+	</update>
+	
+	<!-- 장바구니 삭제하기 -->
+	<delete id="cartDelete" parameterType="CartVO">
+		delete from tb_cart 
+				where m_idx=#{m_idx}
+				and p_idx=#{p_idx}
+				and payment_or_not = 0
+	</delete>
+	
+	<!-- 장바구니에서 결제여부 변경하기 -->
+	<update id="cartPaymentUpdate" parameterType="_int">
+		update tb_cart set payment_or_not=1
+			where m_idx=#{m_idx}
+			and payment_or_not=0
+	</update> 
+	
+	<!-- 주문테이블 상품 추가하기 -->
+	<insert id="orderInsert" parameterType="OrderVO">
+				insert into tb_order (o_idx, m_idx, totalprice, requests )
+				values(#{o_idx},#{m_idx}, #{totalprice}, #{requests})
+				<selectKey keyProperty="o_idx" order="AFTER" resultType="int">
+			        SELECT LAST_INSERT_ID() AS o_idx
+			    </selectKey>
+	</insert>
+	
+	<!-- 직접 구매 상품 장바구니 상품등록: insert -->
+	<insert id="cartInsert2" parameterType="CartVO">
+				insert into tb_cart (c_idx, p_idx, m_idx, c_quantity, payment_or_not )
+					   values(#{c_idx},#{p_idx}, #{m_idx}, #{c_quantity}, 1)
+	</insert>
+	
+	<!-- 상품 결제 후 장바구니 테이블에 o_idx 추가하기: update -->
+	<update id="cartOidxUpdate" parameterType="map">
+		update tb_cart set o_idx=#{o_idx}, payment_or_not=2
+			where m_idx=#{m_idx}
+			and o_idx is null
+			and payment_or_not=1
+	</update> 
+</mapper>

@@ -1,0 +1,34 @@
+CREATE TABLE tb_product (
+    p_idx int unsigned NOT NULL AUTO_INCREMENT,
+    m_idx int unsigned NOT NULL,
+    category varchar(30) NOT NULL,
+    product_name varchar(100) NOT NULL,
+    product_code varchar(50) DEFAULT NULL,
+    brand varchar(30) DEFAULT NULL,
+    summary varchar(50) NOT NULL,
+    detail varchar(1000) NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    origin_file_name1 varchar(50) DEFAULT NULL,
+    save_file_name1 varchar(50) DEFAULT NULL,
+    origin_file_name2 varchar(50) DEFAULT NULL,
+    save_file_name2 varchar(50) DEFAULT NULL,
+    price int unsigned NOT NULL,
+    discount_rate int unsigned DEFAULT NULL,
+    quantity int unsigned DEFAULT NULL,
+    p_reg_date timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    p_last_modified_date timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    p_status decimal(1,0) DEFAULT '0',
+    PRIMARY KEY (p_idx),
+    KEY tb_product_fk (m_idx),
+    CONSTRAINT tb_product_fk FOREIGN KEY (m_idx) REFERENCES tb_member (m_idx)
+  );
+
+  
+CREATE VIEW orderList AS
+SELECT c.c_idx, p.p_idx, p.m_idx, c.o_idx, c.c_quantity, o.o_update_time, 
+	o.totalprice, c.payment_or_not, p.product_name, p.price, p.discount_rate, p.save_file_name1, c.m_idx AS mMIdx
+FROM 
+    tb_cart c 
+    LEFT OUTER JOIN tb_product p ON c.p_idx = p.p_idx
+    LEFT OUTER JOIN tb_order o ON c.o_idx = o.o_idx;
